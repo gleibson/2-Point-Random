@@ -45,7 +45,7 @@ int CALLBACK WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPTSTR CmdLine,
         WindowClass.lpszClassName = "2Point Random";
 
 
-        if (RegisterClass(&WindowClass)) //Registers the window class with function operation system 
+        if (RegisterClass(&WindowClass)) //window class for subsequent use in calls Create Window
         {
             HWND Window = CreateWindowEx(
                 0,                              // Optional window styles.
