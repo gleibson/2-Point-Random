@@ -22,12 +22,33 @@ LRESULT CALLBACK Win32CallBack(HWND Window, UINT Message, WPARAM WParam, LPARAM 
     case WM_PAINT:
     {
 
-    }break;
-    default:
-    {
+        PAINTSTRUCT Paint;
+        HDC DeviceContext = BeginPaint(Window, &Paint);
+        int X = Paint.rcPaint.left;
+        int Y = Paint.rcPaint.top;
+        int Height = Paint.rcPaint.bottom - Paint.rcPaint.top;
+        int Width = Paint.rcPaint.right - Paint.rcPaint.left;
+        static DWORD Operation = WHITENESS;
+
+        PatBlt(DeviceContext, X, Y, Height, Width, Operation);
+
+        if (Operation == WHITENESS)
+        {
+            Operation = BLACKNESS;
+        }
+        else
+        {
+            Operation = WHITENESS;
+        }
+        EndPaint(Window, &Paint);
 
     }break;
-   
+
+    default:
+    {
+        Result = DefWindowProc(Window, Message, WParam, LParam);
+    }break;
+
     }
 
     return(Result);
@@ -35,51 +56,56 @@ LRESULT CALLBACK Win32CallBack(HWND Window, UINT Message, WPARAM WParam, LPARAM 
 
 int CALLBACK WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPTSTR CmdLine, int CmdShow) //Entry Point WinApi
 {
-        // Register the window class.
-        //const wchar_t CLASS_NAME[] = L"Sample Window Class";
-        WNDCLASS WindowClass = {};
+    // Register the window class.
+    WNDCLASS WindowClass = {};
 
-        WindowClass.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
-        WindowClass.lpfnWndProc = Win32CallBack;
-        WindowClass.hInstance = Instance;
-        WindowClass.lpszClassName = "2Point Random";
+    WindowClass.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
+    WindowClass.lpfnWndProc = Win32CallBack;
+    WindowClass.hInstance = Instance;
+    WindowClass.lpszClassName = "2Point Random";
 
 
-        if (RegisterClass(&WindowClass)) //window class for subsequent use in calls Create Window
+    if (RegisterClass(&WindowClass)) //window class for subsequent use in calls Create Window
+    {
+        HWND Window = CreateWindowEx(
+            0,                              // Optional window styles.
+            WindowClass.lpszClassName,      // Window class
+            "2 Point Random",               // Window text
+            WS_OVERLAPPEDWINDOW,            // Window style
+            CW_USEDEFAULT,                  // Size and position
+            CW_USEDEFAULT,
+            CW_USEDEFAULT,
+            CW_USEDEFAULT,
+            NULL,                           // Parent window    
+            NULL,                           // Menu
+            Instance,                       // Instance handle
+            NULL                            // Additional application data
+        );
+
+        if (Window)
         {
-            HWND Window = CreateWindowEx(
-                0,                              // Optional window styles.
-                WindowClass.lpszClassName,      // Window class
-                "2 Point Random",               // Window text
-                WS_OVERLAPPEDWINDOW,            // Window style
-                CW_USEDEFAULT,                  // Size and position
-                CW_USEDEFAULT,
-                CW_USEDEFAULT,
-                CW_USEDEFAULT,
-                NULL,                           // Parent window    
-                NULL,                           // Menu
-                Instance,                       // Instance handle
-                NULL                            // Additional application data
-            );
-            
-                while (Running) //will receive thousands of messages while it runs
+            HDC DeviceContext = GetDC(Window);
+
+            while (Running) //will receive thousands of messages while it runs
+            {
+
+                MSG Message;
+                while (PeekMessage(&Message, 0, 0, 0, PM_REMOVE))  //PeekMessage Dispatches incoming sent messages, checks the thread message queue for a posted message, and retrieves the message (if any exist).
                 {
-                    MSG Message;
-                    while (PeekMessage(&Message, 0, 0, 0, PM_REMOVE))  //PeekMessage Dispatches incoming sent messages, checks the thread message queue for a posted message, and retrieves the message (if any exist).
+                    if (Message.message == WM_QUIT)
                     {
-                        if (Message.message == WM_QUIT)
-                        {
-                            Running = false;
-                        }
-                        TranslateMessage(&Message);
-                        DispatchMessage(&Message);
+                        Running = false;
                     }
-
+                    TranslateMessage(&Message);
+                    DispatchMessage(&Message);
                 }
-            
+
+
+            }
         }
+    }
 
 
-        return 0;
-    
+    return 0;
+
 }
